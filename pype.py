@@ -1,17 +1,12 @@
 from functools import reduce
 
 
-class PipeList(list):
-    def __or__(self, function):
-        return function(self)
-
-
 class ArrayFunction:
     def __init__(self, function):
         self.function = function
 
     def __ror__(self, array):
-        return PipeList(array) | self
+        return self.function(array)
 
     def __or__(self, rhs):
         @functionize
@@ -50,7 +45,7 @@ def padd(lhs, rhs):
 def pmap(callback):
     @functionize
     def inner(array):
-        return PipeList(map(callback, array))
+        return map(callback, array)
     return inner
 
 
