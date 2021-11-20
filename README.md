@@ -14,6 +14,7 @@ Binary functions such as padd, prod, pmax, peq can be either curried `padd(2)` t
 ```python
 prange(3) | padd(1) | prod(2) # [2, 4, 6]
 prange(3) | padd & prange(3) # [0, 2, 4]
+prance(3) | padd ^ piden # [0, 2, 4]
 ```
 
 `*` is used for composition `a * b == a(b(x))` 
