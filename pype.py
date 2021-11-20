@@ -1,4 +1,11 @@
+import math
 from functools import reduce
+
+
+class Fork:
+    def __init__(self, lhs, rhs):
+        self.lhs = lhs
+        self.rhs = rhs
 
 
 class ArrayFunction:
@@ -8,6 +15,17 @@ class ArrayFunction:
     def __ror__(self, array):
         return self.function(array)
 
+    def __add__(self, rhs):
+        return Fork(self, rhs)
+
+    def __xor__(self, rhs):
+        @functionize
+        def inner(array):
+            if isinstance(rhs, Fork):
+                return self(rhs.lhs(array), rhs.rhs(array))
+            return self(rhs(array))(array)
+        return inner
+
     def __or__(self, rhs):
         @functionize
         def inner(*args):
@@ -15,7 +33,7 @@ class ArrayFunction:
 
         return inner
 
-    def __and__(self, rhs):
+    def __mul__(self, rhs):
         return self(rhs)
 
     def __call__(self, *args):
@@ -74,11 +92,17 @@ def binary(function):
             @functionize
             def monadic(element):
                 if isinstance(element, list):
-                    return [int(function(lhs, e)) for e in element]
+                    if isinstance(lhs, list):
+                        return [int(function(e, l)) for e, l in zip(element, lhs)]
+                    return [int(function(e, lhs)) for e in element]
                 return function(element, lhs)
             return monadic
         else:
-            return int(function(lhs, rhs))
+            if isinstance(rhs, list):
+                if isinstance(lhs, list):
+                    return [int(function(e, l)) for e, l in zip(rhs, lhs)]
+                return [int(function(e, lhs)) for e in rhs]
+            return int(function(rhs, lhs))
     return inner
 
 
@@ -98,6 +122,18 @@ def pindexof(lookup):
     return inner
 
 
+@functionize
+def pmask(mask):
+    @functionize
+    def inner(array):
+        return [element for element, melem in zip(array, mask) if melem]
+    return inner
+
+@functionize
+def piden(array):
+    return array
+
+
 padd = binary(lambda x, y: x + y)
 psub = binary(lambda x, y: x - y)
 pmod = binary(lambda x, y: x % y)
@@ -112,36 +148,23 @@ pleq = binary(lambda x, y: x <= y)
 pmax = binary(lambda x, y: x if x > y else y)
 pmin = binary(lambda x, y: x if x < y else y)
 pin = binary(lambda x, y: x in y)
+pgcd = binary(lambda x, y: math.gcd(x, y))
 prange = functionize(lambda x: list(range(x)))
 pchars = functionize(lambda x: [c for c in x])
 
 
 
 
+# string = '(1+(2*(2+3))*(1+1))'
+# parenthesis_depth = pfilter & pin('()') | pindexof('()') | plookup([1, -1, 0]) | pscan & padd | preduce & pmax
+# print(string | parenthesis_depth)
+# print([1, 2, 3] | pmask ^ pgeq(2) | preduce & padd)
+# print(prange(3) | padd(prange(3)))
 
-# TODO make pmap implicit with arithmetic functions
-# pdoublesum = pmap(pprod(2)) | preduce(padd)
-# odds = pfilter(pmod(2) | peq(1))
-
-# lst = list
-
-double_sum = pprod(2) | preduce & padd
-
-string = '(1+(2*(2+3))*(1+1))'
-parenthesis_depth = pfilter & pin('()') | pindexof('()') | plookup([1, -1, 0]) | pscan & padd | preduce & pmax
-print(string | parenthesis_depth)
-
-# array = [1, 2, 3]
-# print(array | pscan & peq)
-# print(array | pin & (prange(2) | padd(1)))
-# a = [1, 2, 3] | pmap(pprod(2)) | preduce(padd)
-# b = [1, 2, 3] | pdoublesum
-# print(array | odds)
-# print(a)
-# print(b)
-
-
-# TODO binary should have implicit monadic definition and array support
-# padd = binary(lambda x, y: x + y)
-
-# odds = mask ^ (pmod(2) | peq(1), piden)
+# ^ is an operator which combines functions like this
+# x | a ^ b == a(b(x))(x)
+# x | a == a(x)
+# x | a * b == a(b)(x)
+# x | a ^ b + c == a(b(x), c(x)) 
+gcd_of_min_and_max = pgcd ^ preduce * pmax + preduce * pmin
+print([2, 5, 10] | gcd_of_min_and_max)
