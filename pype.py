@@ -113,6 +113,14 @@ def plookup(lookup):
         return [lookup[index] for index in array]
     return inner
 
+@functionize
+def pget(key):
+    @functionize
+    def inner(array):
+        return [element[key] for element in array]
+    return inner
+
+
 
 @functionize
 def pindexof(lookup):
@@ -120,6 +128,14 @@ def pindexof(lookup):
     def inner(array):
         return [lookup.index(element) if element in lookup else len(lookup) for element in array]
     return inner
+
+@functionize
+def ptransform(initial, final):
+    @functionize
+    def inner(array):
+        return [final[initial.index(element)] if element in initial else len(initial) for element in array]
+    return inner
+
 
 
 @functionize
@@ -151,20 +167,3 @@ pin = binary(lambda x, y: x in y)
 pgcd = binary(lambda x, y: math.gcd(x, y))
 prange = functionize(lambda x: list(range(x)))
 pchars = functionize(lambda x: [c for c in x])
-
-
-
-
-# string = '(1+(2*(2+3))*(1+1))'
-# parenthesis_depth = pfilter & pin('()') | pindexof('()') | plookup([1, -1, 0]) | pscan & padd | preduce & pmax
-# print(string | parenthesis_depth)
-# print([1, 2, 3] | pmask ^ pgeq(2) | preduce & padd)
-# print(prange(3) | padd(prange(3)))
-
-# ^ is an operator which combines functions like this
-# x | a ^ b == a(b(x))(x)
-# x | a == a(x)
-# x | a * b == a(b)(x)
-# x | a ^ b + c == a(b(x), c(x)) 
-gcd_of_min_and_max = pgcd ^ preduce * pmax + preduce * pmin
-print([2, 5, 10] | gcd_of_min_and_max)
