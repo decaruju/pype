@@ -2,6 +2,8 @@
 `pype` was written to mimic `apl` programming in python, but replacing arcane runes with more understandable function names as a way to understand programs.
 All functions are prefixed with `p` as a way to avoid collisions for the proof of concept.
 Symbols might change, I have to use the python's priority of operations, so symbols might not be the most intuitive.
+
+Programs in python are usually use twice the amount of tokens because python doesn't support having tokens side by side, `a b # SyntaxError`, so we need an operator between each functions
 # examples
 `|` is a function call
 ```python

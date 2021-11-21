@@ -121,6 +121,31 @@ def pget(key):
     return inner
 
 
+@functionize
+def pconstant(constant):
+    @functionize
+    def inner(_array):
+        return constant
+    return inner
+
+@functionize
+def pgetattr(key):
+    @functionize
+    def inner(array):
+        if isinstance(array, list):
+            return [getattr(element) for element in array]
+        return getattr(array, key)
+    return inner
+
+@functionize
+def psetattr(key, value):
+    @functionize
+    def inner(array):
+        array[key] = value
+        return array
+    return inner
+
+
 
 @functionize
 def pindexof(lookup):
@@ -148,6 +173,10 @@ def pmask(mask):
 @functionize
 def piden(array):
     return array
+
+@functionize
+def psort(array):
+    return sorted(array)
 
 
 padd = binary(lambda x, y: x + y)
